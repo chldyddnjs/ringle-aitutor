@@ -51,12 +51,12 @@ RSpec.describe Membership, type: :model do
 
   describe ".expire_outdated!" do
     it "updates status to expired for passed memberships" do
-      m = create(:membership, expires_at: 1.hour.ago, status: "active")
+      m = create(:membership, starts_at: 1.day.ago, expires_at: 1.hour.ago, status: "active")
       expect { Membership.expire_outdated! }.to change { m.reload.status }.to("expired")
     end
 
     it "does not affect future memberships" do
-      m = create(:membership, expires_at: 1.day.from_now)
+      m = create(:membership, starts_at: 1.day.ago, expires_at: 1.day.from_now)
       expect { Membership.expire_outdated! }.not_to change { m.reload.status }
     end
   end

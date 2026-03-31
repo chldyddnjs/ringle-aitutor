@@ -9,7 +9,7 @@ FactoryBot.define do
 
     trait(:admin_granted) { granted_by { "admin" } }
     trait :expired do
-      starts_at  { 60.days.ago }
+      starts_at  { 61.days.ago }
       expires_at { 1.day.ago }
       status     { "expired" }
     end

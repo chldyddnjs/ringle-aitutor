@@ -45,9 +45,10 @@ class AiController < ApplicationController
     response.headers["Cache-Control"]     = "no-cache"
     response.headers["X-Accel-Buffering"] = "no"
 
-    client = OpenAI::Client.new(access_token: ENV.fetch("OPENAI_API_KEY"))
-
+    
     begin
+      api_key = ENV.fetch("OPENAI_API_KEY") # Missing env var will raise KeyError
+      client = OpenAI::Client.new(access_token: ENV.fetch("OPENAI_API_KEY"))
       client.chat(
         parameters: {
           model:       "gpt-4o",

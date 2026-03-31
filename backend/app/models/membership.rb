@@ -14,7 +14,7 @@ class Membership < ApplicationRecord
   scope :active,  -> { where(status: "active").where("expires_at > ?", Time.current) }
   scope :expired, -> { where("expires_at <= ? OR status = ?", Time.current, "expired") }
 
-  before_save :auto_expire
+  before_update :auto_expire
 
   def active?
     status == "active" && expires_at > Time.current

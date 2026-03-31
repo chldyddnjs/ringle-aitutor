@@ -1,5 +1,4 @@
 class ApplicationController < ActionController::API
-  include ActionController::Live
 
   before_action :set_current_user
 
@@ -21,6 +20,7 @@ class ApplicationController < ActionController::API
   end
 
   def require_user!
+    return if performed?
     render json: { error: "X-User-Id 헤더가 필요합니다." }, status: :unauthorized unless current_user
   end
 

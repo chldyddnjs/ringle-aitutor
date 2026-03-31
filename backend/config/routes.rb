@@ -14,11 +14,9 @@ Rails.application.routes.draw do
   resources :payments, only: [:create]
 
   # AI (멤버십 conversation 기능 필요)
-  namespace :ai do
-    post :chat
-    post :stt
-    post :tts
-  end
+  post '/ai/chat', to: 'ai#chat'
+  post '/ai/stt',  to: 'ai#stt'
+  post '/ai/tts',  to: 'ai#tts'
 
   # 어드민
   namespace :admin do

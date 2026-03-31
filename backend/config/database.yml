@@ -6,14 +6,11 @@ default: &default
 development:
   <<: *default
   url: <%= ENV.fetch("DATABASE_URL", "postgresql://postgres:password@localhost:5432/ringle_ai_tutor_development") %>
-
+  
 test:
   <<: *default
   url: <%= ENV.fetch("DATABASE_URL_TEST", "postgresql://postgres:password@db:5432/ringle_ai_tutor_test") %>
-
-# test:
-#   <<: *default
-#   url: <%= ENV.fetch("DATABASE_URL_TEST", "postgresql://postgres:password@localhost:5432/ringle_ai_tutor_test") %>
+  pool: 10
 
 production:
   <<: *default
