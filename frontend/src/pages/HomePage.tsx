@@ -210,17 +210,22 @@ export function HomePage() {
   useEffect(() => { if (userId) loadData(); }, [userId]);
 
   async function loadData() {
-    setLoading(true); setError(null);
+    setLoading(true); 
+    setError(null);
     try {
       const [memRes, plansRes] = await Promise.all([fetchActiveMembership(), fetchPlans()]);
       setMembership(memRes.membership);
-      setPlans(plansRes);
+      const uniquePlans = plansRes.filter((plan, index, self) =>
+        index === self.findIndex((p) => p.name === plan.name)
+      );
+      setPlans(uniquePlans);
     } catch {
       setError("데이터를 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
   }
+
 
   async function handlePurchase(planId: string) {
     setPurchasing(planId); setError(null); setSuccess(null);
@@ -318,32 +323,32 @@ export function HomePage() {
 
             {/* 플랜 목록 */}
             <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "20px", color: "#1F1735" }}>멤버십 플랜</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
-              {plans.map(plan => {
-                const isPremium = plan.features.conversation;
-                return (
-                  <div key={plan.id} style={{
-                    background: "#fff", border: `1.5px solid ${isPremium ? "#C4B5FD" : "#E5E7EB"}`,
-                    borderRadius: "20px", padding: "28px", position: "relative",
-                    boxShadow: isPremium ? "0 4px 24px rgba(124,58,237,0.10)" : "none",
-                  }}>
-                    {isPremium && (
-                      <div style={{ position: "absolute", top: "-13px", left: "50%", transform: "translateX(-50%)", background: "#7C3AED", color: "#fff", padding: "3px 16px", borderRadius: "20px", fontSize: "12px", fontWeight: 700 }}>인기</div>
-                    )}
-                    <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "4px", color: "#1F1735" }}>{plan.name}</div>
-                    <div style={{ fontSize: "28px", fontWeight: 800, color: "#7C3AED", marginBottom: "2px" }}>{plan.price_display}</div>
-                    <div style={{ fontSize: "13px", color: "#9CA3AF", marginBottom: "20px" }}>{plan.duration_days}일 이용권</div>
-                    <div style={{ marginBottom: "24px" }}>
-                      {(["learning", "conversation", "analysis"] as const).map(f => {
-                        const has = plan.features[f];
-                        return (
-                          <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", color: has ? "#374151" : "#D1D5DB", fontSize: "14px" }}>
-                            <span style={{ width: "16px", textAlign: "center", fontWeight: 700 }}>{has ? "✓" : "✗"}</span>
-                            {FEATURE_LABEL[f]}
-                          </div>
-                        );
-                      })}
-                    </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                {plans.map(plan => {
+                  const isPremium = plan.features.conversation;
+                  return (
+                    <div key={plan.id} style={{
+                      background: "#fff", border: `1.5px solid ${isPremium ? "#C4B5FD" : "#E5E7EB"}`,
+                      borderRadius: "20px", padding: "28px", position: "relative",
+                      boxShadow: isPremium ? "0 4px 24px rgba(124,58,237,0.10)" : "none",
+                    }}>
+                      {isPremium && (
+                        <div style={{ position: "absolute", top: "-13px", left: "50%", transform: "translateX(-50%)", background: "#7C3AED", color: "#fff", padding: "3px 16px", borderRadius: "20px", fontSize: "12px", fontWeight: 700 }}>인기</div>
+                      )}
+                      <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "4px", color: "#1F1735" }}>{plan.name}</div>
+                      <div style={{ fontSize: "28px", fontWeight: 800, color: "#7C3AED", marginBottom: "2px" }}>{plan.price_display}</div>
+                      <div style={{ fontSize: "13px", color: "#9CA3AF", marginBottom: "20px" }}>{plan.duration_days}일 이용권</div>
+                      <div style={{ marginBottom: "24px" }}>
+                        {(["learning", "conversation", "analysis"] as const).map(f => {
+                          const has = plan.features[f];
+                          return (
+                            <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", color: has ? "#374151" : "#D1D5DB", fontSize: "14px" }}>
+                              <span style={{ width: "16px", textAlign: "center", fontWeight: 700 }}>{has ? "✓" : "✗"}</span>
+                              {FEATURE_LABEL[f]}
+                            </div>
+                          );
+                        })}
+                      </div>
                     <button
                       onClick={() => handlePurchase(plan.id)}
                       disabled={!!purchasing}
