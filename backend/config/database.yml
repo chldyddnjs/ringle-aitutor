@@ -1,0 +1,20 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL", "postgresql://postgres:password@localhost:5432/ringle_ai_tutor_development") %>
+
+test:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL_TEST", "postgresql://postgres:password@db:5432/ringle_ai_tutor_test") %>
+
+# test:
+#   <<: *default
+#   url: <%= ENV.fetch("DATABASE_URL_TEST", "postgresql://postgres:password@localhost:5432/ringle_ai_tutor_test") %>
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>

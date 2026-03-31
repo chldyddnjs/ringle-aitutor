@@ -1,0 +1,56 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB:       ringle_ai_tutor_development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout:  5s
+      retries:  10
+
+  # ── Rails Backend ───────────────────────────────────────────────────────────
+  backend:
+    build:
+      context:    ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV:           development
+      DATABASE_URL:        postgresql://postgres:password@db:5432/ringle_ai_tutor_development
+      OPENAI_API_KEY:      ${OPENAI_API_KEY}
+      CORS_ORIGINS:        http://localhost,http://localhost:80
+      RAILS_LOG_TO_STDOUT: "true"
+      SECRET_KEY_BASE:     ${SECRET_KEY_BASE:-ringle_dev_secret_key_base_change_in_production}
+    ports:
+      - "3000:3000"
+    volumes:
+      - bundle_cache:/usr/local/bundle
+
+  # ── React Frontend ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context:    ./frontend
+      dockerfile: Dockerfile
+      args:
+        # 브라우저는 localhost:3000으로 직접 Rails에 접근
+        VITE_API_URL: http://localhost:3000
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
+  bundle_cache:
