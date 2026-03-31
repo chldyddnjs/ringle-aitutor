@@ -226,3 +226,120 @@ ringle-v2/
             ├── useChat.test.ts        ← hook 단위 테스트 (15개 케이스)
             └── MessageBubble.test.tsx
 ```
+
+## 🧪 테스트 및 검증
+
+본 프로젝트는 **테스트 실패 시 원인을 빠르게 격리**할 수 있도록 계층별로 테스트를 분리하여 설계했습니다.
+
+### 1. 테스트 구조
+
+spec/
+├── models/     # 모델 단위 테스트 (검증, 상태, 스코프)
+├── services/   # 비즈니스 로직 테스트
+└── requests/   # API 통합 테스트 (HTTP 요청 ~ 응답)
+
+- Model: 데이터 검증 및 상태 로직 검증
+- Service: 결제 및 멤버십 생성 등 핵심 비즈니스 로직 검증
+- Request: 실제 API 호출 흐름 및 인증/권한 검증
+
+문제 발생 시 원인을 빠르게 구분할 수 있습니다.
+
+---
+
+### 2. Database 전략
+
+config.use_transactional_fixtures = false
+
+config.before(:suite) do
+  DatabaseCleaner.strategy = :transaction
+  DatabaseCleaner.clean_with(:truncation)
+end
+
+config.around(:each) do |example|
+  DatabaseCleaner.cleaning { example.run }
+end
+
+- transactional_fixtures 비활성화
+- DatabaseCleaner로 테스트 격리 관리
+
+이유:
+SSE(ActionController::Live) 환경에서 트랜잭션 충돌을 방지하기 위함
+
+---
+
+### 3. Factory 설계 전략
+
+기본 원칙:
+- 기본값 = 정상 케이스
+- 예외 상황 = trait으로 표현
+
+factory :membership do
+  starts_at  { Time.current }
+  expires_at { 30.days.from_now }
+  status     { "active" }
+
+  trait :expired do
+    starts_at  { 60.days.ago }
+    expires_at { 1.day.ago }
+    status     { "expired" }
+  end
+end
+
+---
+
+### 4. build vs create 전략
+
+- build: validation 및 로직 테스트 (빠름)
+- create: DB 쿼리 및 scope 테스트
+
+---
+
+### 5. 외부 의존성 Mock 처리
+
+allow_any_instance_of(PaymentGatewayService)
+  .to receive(:charge)
+  .and_return(success_response)
+
+외부 결제 API 의존성을 제거하고 테스트 안정성을 확보합니다.
+
+---
+
+### 6. 트랜잭션 설계 검증
+
+expect(Payment.last.status).to eq("failed")
+expect(Membership.count).to eq(0)
+
+결제 실패 시:
+- Membership 생성되지 않음
+- Payment 기록은 유지됨
+
+---
+
+### 7. 인증 및 권한 테스트
+
+- 정상: 201
+- 인증 없음: 401
+- 권한 없음: 403
+
+모든 보호된 API에 대해 검증합니다.
+
+---
+
+### 8. 비즈니스 규칙 검증
+
+비활성 플랜 결제 시 404 반환 등
+비즈니스 정책이 정확히 반영되는지 테스트합니다.
+
+---
+
+## ✅ 요약
+
+- 계층 분리 → 문제 원인 빠른 파악
+- DatabaseCleaner → 테스트 격리
+- Factory trait → 의도 명확화
+- build/create 구분 → 성능 최적화
+- Mock → 외부 의존성 제거
+- 권한 테스트 → 보안 안정성 확보
+- 트랜잭션 검증 → 데이터 정합성 보장
+
+본 테스트는 단순 동작 확인이 아닌 설계 의도를 검증하는 것을 목표로 합니다.

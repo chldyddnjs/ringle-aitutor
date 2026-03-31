@@ -22,10 +22,16 @@ export function AdminPage() {
   useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
-    setLoading(true); setError(null);
+    setLoading(true); 
+    setError(null);
     try {
       const [u, m, p] = await Promise.all([adminFetchUsers(), adminFetchMemberships(), fetchPlans()]);
-      setUsers(u.users); setMemberships(m.memberships); setPlans(p);
+      const uniquePlans = p.filter((plan, index, self) =>
+        index === self.findIndex((p) => p.name === plan.name)
+      );
+      setUsers(u.users); 
+      setMemberships(m.memberships); 
+      setPlans(uniquePlans);
     } catch (e: unknown) {
       setError((e as { error?: string })?.error ?? "데이터 로드 실패. Admin 계정 ID를 확인하세요.");
     } finally { setLoading(false); }
@@ -33,7 +39,8 @@ export function AdminPage() {
 
   async function handleGrant() {
     if (!grantUserId || !grantPlanId) return;
-    setGranting(true); setError(null);
+    setGranting(true); 
+    setError(null);
     try {
       await adminGrantMembership(grantUserId, grantPlanId);
       setSuccess("멤버십이 부여되었습니다."); setGrantUserId(""); setGrantPlanId("");

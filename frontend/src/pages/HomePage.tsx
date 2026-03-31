@@ -214,10 +214,11 @@ export function HomePage() {
     setError(null);
     try {
       const [memRes, plansRes] = await Promise.all([fetchActiveMembership(), fetchPlans()]);
-      setMembership(memRes.membership);
       const uniquePlans = plansRes.filter((plan, index, self) =>
         index === self.findIndex((p) => p.name === plan.name)
       );
+      
+      setMembership(memRes.membership);
       setPlans(uniquePlans);
     } catch {
       setError("데이터를 불러오지 못했습니다.");
